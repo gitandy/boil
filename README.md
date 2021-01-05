@@ -1,23 +1,23 @@
-ezMake
+Boil
 =========
-ezMake is an easy to use automated builder based on special make files.
+Boil is an easy to use automated builder based on special recipe files.
 You can define different targets and target dependencies.
 
-The make file is assumed to be named ezMakefile.
+The recipe file is assumed to be named Recipe.
 
-The ezMakefile
+The Recipe
 --------------
-The ezMakefile is a simple text file preferably  UTF-8 coded.
+The Recipe is a simple text file preferably UTF-8 coded.
 
 ### Using comments
 Each line starting with a hash is interpreted as a comment:
 
-    # Makefile for project X
+    # Recipe for project X
 
 ### Defining a target
 A target is defined by a line starting with a right arrow:
 
-    # Makefile for project X
+    # Recipe for project X
     
     # Install target
     > install
@@ -28,8 +28,8 @@ Normally actions should be defined inside targets. Actions inside of targets
 have to be indented by at least one space character or a tab.
 For common operations actions outside of targets can be defined:
 
-    # Makefile for project X
-    # An action which is executed every time ezmake is run
+    # Recipe for project X
+    # An action which is executed every time boil is run
     get git_tag
     
     # Install target
@@ -40,8 +40,8 @@ For common operations actions outside of targets can be defined:
 ### Using dependencies
 If needing dependencies just add them after a second right arrow after the target name:
 
-    # Makefile for project X
-    # An action which is executed every time ezmake is run
+    # Recipe for project X
+    # An action which is executed every time boil is run
     get git_tag
     
     # Install target depending on build
@@ -120,10 +120,10 @@ Example:
 
 Command line
 ------------
-ezMake automatically uses *ezMakefile* if no other file is specified and runs target all 
+Boil automatically uses *Recipe* if no other file is specified and runs target all 
 (and the target it depends on).
 
-    ezmake [-f MAKEFILE] [TARGET]
+    boil [-f RECIPE] [TARGET]
 
 License
 -------

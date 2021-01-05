@@ -119,9 +119,9 @@ class VarsDict(dict):
         return key
 
 
-class EzMake:
-    def __init__(self, makefile='ezMakefile', verbose=False):
-        self._makefile_ = makefile
+class Boiler:
+    def __init__(self, recipe='Recipe', verbose=False):
+        self._recipe_ = recipe
         self._verbose_ = verbose
 
         self.targets = {
@@ -138,11 +138,11 @@ class EzMake:
 
         self._vars_ = VarsDict()
 
-        self.read_makefile()
+        self.read_recipe()
 
-    def read_makefile(self):
+    def read_recipe(self):
         try:
-            with open(self._makefile_, 'rt') as mf:
+            with open(self._recipe_, 'rt') as mf:
                 target = '#default#'
 
                 l_nr = 1
@@ -218,17 +218,17 @@ class EzMake:
                 print(f'\tError running {action}: {e}')
                 sys.exit(1)
 
-    def make(self, target='all'):
+    def boil(self, target='all'):
         if target not in self.targets:
             print(f'Error: Target \'{target}\' not available!')
         else:
             if not self.targets[target]['made']:
                 for tgt in self.targets[target]['depends']:
                     if not self.targets[tgt]['made']:
-                        self.make(tgt)
+                        self.boil(tgt)
 
                 if target != '#default#':
-                    print(f'Making target {target}...')
+                    print(f'Boiling target {target}...')
 
                 for act in self.targets[target]['actions']:
                     self.run_action(act, target)
@@ -240,12 +240,12 @@ class EzMake:
 
 
 def print_help(path):
-    f"""Usage: {path} [-f MAKEFILE] [TARGET]
+    f"""Usage: {path} [-f RECIPE] [TARGET]
        {path} -h"""
 
 
 if __name__ == '__main__':
-    ez = None
+    boiler = None
 
     target = 'all'
     if len(sys.argv) > 1:
@@ -258,12 +258,12 @@ if __name__ == '__main__':
         if len(sys.argv) > 1:
             target = sys.argv.pop(1)
 
-    makefile = 'ezMakefile'
+    recipe = 'Recipe'
     if target == '-f':
         if len(sys.argv) > 1:
-            makefile = sys.argv.pop(1)
+            recipe = sys.argv.pop(1)
             target = 'all'
-            ez = EzMake(makefile, verbose)
+            boiler = Boiler(recipe, verbose)
         else:
             print_help(sys.argv[0])
             sys.exit(1)
@@ -271,9 +271,9 @@ if __name__ == '__main__':
         print_help(sys.argv[0])
         sys.exit(0)
     else:
-        ez = EzMake(verbose=verbose)
+        boiler = Boiler(verbose=verbose)
 
     if len(sys.argv) > 1:
         target = sys.argv.pop(1)
 
-    ez.make(target)
+    boiler.boil(target)
