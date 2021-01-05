@@ -180,10 +180,17 @@ class EzMake:
         for act in action:
             new_action.append(act.format_map({**self._vars_, **{'target': target}}))
 
-        if action[0] in ('do', 'get'):
-            if self._verbose_:
-                print(f'\tRunning {new_action}...')
+        if self._verbose_:
+            print(f'\tRunning {new_action}...')
 
+        if action[0] == 'set':
+            if len(new_action) == 3:
+                self._vars_[new_action[1]] = new_action[2]
+            elif len(new_action) > 3:
+                self._vars_[new_action[1]] = ' '.join(new_action[2:])
+            else:
+                print(f'\tError running {new_action}: Too few arguments!')
+        elif action[0] in ('do', 'get'):
             if len(new_action) > 1:
                 args = []
                 if len(new_action) > 2:
@@ -201,9 +208,6 @@ class EzMake:
                     print(f'\tError running {new_action}: Internal command not available!')
                     sys.exit(1)
         else:
-            if self._verbose_:
-                print(f'\tRunning {new_action}...')
-
             try:
                 res = subprocess.run(new_action, capture_output=True)
                 if res.returncode != 0:

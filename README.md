@@ -79,7 +79,15 @@ Other variables can be generated if you use internal get commands (see below).
     ...
 
 ### Using builtin commands
-There are several internal command which are prefixed by *do* or *get*.
+There are several internal command which are prefixed by *do*, *get* or *set*.
+
+#### Set command
+With set, you can set internal variables.
+
+    ...
+    set var Test
+    set var1 {var}-{git_tag}
+    ...
 
 #### Get commands
 Get commands store information in a variable named like the command 
