@@ -68,9 +68,47 @@ A target can depend on more than one other targets:
     # Install depends on build and version
     > install > build version
     ...
-    
+
+### Use variables
+You can use variables. Currently there is only {target} which is substituted by the current target name.
+Other variables can be generated if you use internal get commands (see below).
+
+    ...
+    > version.py
+        do write {target} VERSION = '{git_tag}'
+    ...
+
 ### Using builtin commands
 There are several internal command which are prefixed by *do* or *get*.
+
+#### Get commands
+Get commands store information in a variable named like the command 
+* git_tag: Stores the last git tag
+* git_branch: Stores the current git branch name or '' if on master
+* git_modified: stores 'Modified' if working copy contains uncommitted changes or '' otherwise 
+
+Example:
+
+    ...
+    get git_tag
+    ...
+
+#### Do commands
+Do commands executes simple things
+* write *file* *text*: Writes the text to a file
+* append *file* *text*: Appends the text to a file
+* print *text*: Just prints something
+* rm *file*: Removes a file (supports wildcards)
+* cd *path*: Changes to the directory
+* mkdir *path*: Creates a directory
+* rmdir *path*: Removes a directory
+
+Example:
+
+    ...
+    do write version.py VERSION = 'v1.0'
+    do append version.py BRANCH = 'FunctionX'
+    ...
 
 Command line
 ------------

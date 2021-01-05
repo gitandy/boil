@@ -1,5 +1,6 @@
 import os
 import sys
+import glob
 import subprocess
 
 
@@ -23,16 +24,56 @@ class InternalActions:
 
     @classmethod
     def get_git_tag(cls, _):
-        return cls._run_proc(['git', 'describe', '--tags'])
+        return cls._run_proc('git', 'describe', '--tags')
+
+    @classmethod
+    def get_git_branch(cls, _):
+        branch = cls._run_proc('git', 'rev-parse', '--abbrev-ref', 'HEAD')
+        return branch if not branch == 'master' else ''
+
+    @classmethod
+    def get_git_modified(cls, _):
+        return 'Modified' if len(cls._run_proc('git', 'diff', '--name-only')) > 0 else ''
+
+    @staticmethod
+    def do_write(args):
+        if len(args) > 1:
+            file = args[0]
+            txt = ' '.join(args[1:])
+        else:
+            return False
+
+        try:
+            with open(file, 'wt') as f:
+                f.write(txt+'\n')
+            return True
+        except OSError:
+            return False
+
+    @staticmethod
+    def do_append(args):
+        if len(args) > 1:
+            file = args[0]
+            txt = ' '.join(args[1:])
+        else:
+            return False
+
+        try:
+            with open(file, 'at') as f:
+                f.write(txt+'\n')
+                return True
+        except OSError:
+            return False
 
     @staticmethod
     def do_rm(file):
         try:
-            os.remove(file[0])
+            for f in glob.iglob(file):
+                os.remove(f)
             return True
         except FileNotFoundError:
             return True
-        except OSError:
+        except (OSError, TypeError):
             return False
 
     @staticmethod
@@ -66,9 +107,9 @@ class InternalActions:
         """Runs a process with arguments
         :return Tuple of return code, stdout text, stderr text"""
         try:
-            res = subprocess.run(list(proc) if type(proc) is str else proc, capture_output=True)
+            res = subprocess.run([proc] if type(proc) is str else proc, capture_output=True)
             if res.returncode == 0:
-                return str(res.stdout, sys.getdefaultencoding()).replace('\r', '')
+                return str(res.stdout, sys.getdefaultencoding()).replace('\r', '').strip()
         except OSError as e:
             return None
 
@@ -134,32 +175,32 @@ class EzMake:
             print(e)
             sys.exit(1)
 
-    def run_action(self, action):
+    def run_action(self, action, target):
+        new_action = []
+        for act in action:
+            new_action.append(act.format_map({**self._vars_, **{'target': target}}))
+
         if action[0] in ('do', 'get'):
             if self._verbose_:
-                print(f'\tRunning {action}...')
+                print(f'\tRunning {new_action}...')
 
-            if len(action) > 1:
+            if len(new_action) > 1:
                 args = []
-                if len(action) > 2:
-                    args = action[2:]
+                if len(new_action) > 2:
+                    args = new_action[2:]
 
-                if hasattr(InternalActions, action[0] + '_' + action[1]):
-                    res = getattr(InternalActions, action[0] + '_' + action[1])(args)
+                if hasattr(InternalActions, new_action[0] + '_' + new_action[1]):
+                    res = getattr(InternalActions, new_action[0] + '_' + new_action[1])(args)
 
-                    if not res:
-                        print(f'\tError running {action}: Internal command failed!')
+                    if res is None or res is False:  # We don't want to fetch empty strings!
+                        print(f'\tError running {new_action}: Internal command failed!')
                         sys.exit(1)
-                    elif action[0] == 'get':
-                        self._vars_[action[1]] = res
+                    elif new_action[0] == 'get':
+                        self._vars_[new_action[1]] = res
                 else:
-                    print(f'\tError running {action}: Internal command not available!')
+                    print(f'\tError running {new_action}: Internal command not available!')
                     sys.exit(1)
         else:
-            new_action = []
-            for act in action:
-                new_action.append(act.format_map(self._vars_))
-
             if self._verbose_:
                 print(f'\tRunning {new_action}...')
 
@@ -186,7 +227,7 @@ class EzMake:
                     print(f'Making target {target}...')
 
                 for act in self.targets[target]['actions']:
-                    self.run_action(act)
+                    self.run_action(act, target)
 
                 if target != '#default#':
                     print('\t...done!')
